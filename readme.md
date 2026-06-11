@@ -2,9 +2,9 @@
 
 ## Información del Estudiante
 
-- **Nombre:** [Tu nombre completo aquí]
-- **Carrera:** [Tu carrera]
-- **Fecha de inicio:** [Fecha]
+- **Nombre:** [Juan Carlos Banda Guaman]
+- **Carrera:** [Desarrollo de Software]
+- **Fecha de inicio:** [11 de junio de 2026]
 
 ---
 
