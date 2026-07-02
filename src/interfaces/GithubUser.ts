@@ -6,3 +6,4 @@ export interface GithubUser {
     bio?:string
 
 }
+
