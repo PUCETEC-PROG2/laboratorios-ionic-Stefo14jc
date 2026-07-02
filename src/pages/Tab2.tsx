@@ -1,13 +1,24 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IonButton, IonContent, IonHeader, IonInput, IonPage, IonTextarea, IonTitle, IonToolbar, IonText } from '@ionic/react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { RepositoryPayload } from '../interfaces/RepositoryPayload';
+import { Repository } from '../interfaces/Repository';
 import './Tab2.css';
-import { createRepository } from '../services/GitHubService';
+import { createRepository, updateRepository } from '../services/GitHubService';
 import LoadingSpinner from '../components/LoadingSpinner';
+
+interface LocationState {
+  editRepo?: Repository;
+}
 
 const Tab2: React.FC = () => {
   const history = useHistory();
+  const location = useLocation<LocationState>();
+
+  // Si venimos desde el botón "editar" de Tab1, aquí llega el repo a editar
+  const editRepo = location.state?.editRepo ?? null;
+  const isEditMode = editRepo !== null;
+
   const [repositoryData, setRepositoryData] = useState<RepositoryPayload>({
     name: "",
     description: ""
@@ -15,39 +26,54 @@ const Tab2: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const saveRepo = async () => {  
-    if (!repositoryData.name || repositoryData.name.trim() === ''){
+  // Precarga el formulario cuando entramos en modo edición
+  useEffect(() => {
+    if (editRepo) {
+      setRepositoryData({
+        name: editRepo.name,
+        description: editRepo.description ?? ""
+      });
+    } else {
+      setRepositoryData({ name: "", description: "" });
+    }
+  }, [editRepo]);
+
+  const saveRepo = async () => {
+    if (!repositoryData.name || repositoryData.name.trim() === '') {
       setErrorMsg("El nombre del repositorio es obligatorio");
       return;
     }
     setLoading(true);
     setErrorMsg("");
-    createRepository(repositoryData)
-      .then(() => history.push("/tab1"))
+
+    const request = isEditMode && editRepo
+      ? updateRepository(editRepo.owner.login, editRepo.name, repositoryData)
+      : createRepository(repositoryData);
+
+    request
+      .then(() => {
+        setRepositoryData({ name: "", description: "" });
+        history.push("/tab1");
+      })
       .catch((error) => {
         const apiError = error instanceof Error ? error.message : String(error);
-        setErrorMsg(`Error al crear el repositorio: ${apiError}`);
+        const action = isEditMode ? "actualizar" : "crear";
+        setErrorMsg(`Error al ${action} el repositorio: ${apiError}`);
       })
-      .finally(() => 
-        setLoading(false));
-        setRepositoryData ({
-          name: "",
-          description: ""
-        })
-  
+      .finally(() => setLoading(false));
   };
 
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Formulario del repositorio</IonTitle>
+          <IonTitle>{isEditMode ? 'Actualizar repositorio' : 'Formulario del repositorio'}</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
         <IonHeader collapse="condense">
           <IonToolbar>
-            <IonTitle size="large">Formulario de Repositorio</IonTitle>
+            <IonTitle size="large">{isEditMode ? 'Actualizar Repositorio' : 'Formulario de Repositorio'}</IonTitle>
           </IonToolbar>
         </IonHeader>
 
@@ -58,7 +84,7 @@ const Tab2: React.FC = () => {
             labelPlacement="floating"
             placeholder="Ingrese el nombre del repositorio"
             value={repositoryData.name}
-            onIonChange={(e) => setRepositoryData({...repositoryData, name: e.detail.value ?? ""})}
+            onIonChange={(e) => setRepositoryData({ ...repositoryData, name: e.detail.value ?? "" })}
           />
           <IonTextarea
             className='form-field'
@@ -66,10 +92,10 @@ const Tab2: React.FC = () => {
             labelPlacement='floating'
             placeholder='Ingrese la descripción del repositorio'
             value={repositoryData.description}
-            onIonChange={(e) => setRepositoryData({...repositoryData, description: e.detail.value ?? ""})}
+            onIonChange={(e) => setRepositoryData({ ...repositoryData, description: e.detail.value ?? "" })}
             rows={6}
           />
-          {errorMsg !== "" && <IonText color="danger"><p>{errorMsg}</p></IonText> }  
+          {errorMsg !== "" && <IonText color="danger"><p>{errorMsg}</p></IonText>}
           <IonButton
             className='form-field'
             expand='block'
@@ -77,7 +103,7 @@ const Tab2: React.FC = () => {
             shape="round"
             onClick={saveRepo}
           >
-            Guardar
+            {isEditMode ? 'Actualizar repositorio' : 'Guardar'}
           </IonButton>
         </div>
         {loading && <LoadingSpinner />}

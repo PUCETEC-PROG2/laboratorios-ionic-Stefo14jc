@@ -11,22 +11,18 @@ import {
   IonAlert,
   IonToast
 } from '@ionic/react';
+import { useHistory } from 'react-router-dom';
 import './Tab1.css';
 import { Repository } from '../interfaces/Repository';
-import { RepositoryPayload } from '../interfaces/RepositoryPayload';
 import RepoItem from '../components/RepoItem';
-import EditRepoModal from '../components/EditRepoModal';
-import { fetchRepositories, updateRepository, deleteRepository } from '../services/GitHubService';
+import { fetchRepositories, deleteRepository } from '../services/GitHubService';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Tab1: React.FC = () => {
+  const history = useHistory();
   const [repositoryList, setRepositoryList] = React.useState<Repository[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState("");
-
-  // Estado para edición (PATCH)
-  const [repoToEdit, setRepoToEdit] = React.useState<Repository | null>(null);
-  const [showEditModal, setShowEditModal] = React.useState(false);
 
   // Estado para eliminación (DELETE)
   const [repoToDelete, setRepoToDelete] = React.useState<Repository | null>(null);
@@ -62,25 +58,11 @@ const Tab1: React.FC = () => {
   });
 
   // --- Edición (PATCH) ---
+  // Al hacer clic en editar, redirige al Tab2 llevando el repositorio
+  // seleccionado en el "state" de la navegación. Tab2 detecta ese state
+  // y cambia a modo "actualizar".
   const handleEditRequest = (repository: Repository) => {
-    setRepoToEdit(repository);
-    setShowEditModal(true);
-  };
-
-  const handleEditCancel = () => {
-    setShowEditModal(false);
-    setRepoToEdit(null);
-  };
-
-  const handleEditSave = async (changes: Partial<RepositoryPayload>) => {
-    if (!repoToEdit) return;
-    const updatedRepo = await updateRepository(repoToEdit.owner.login, repoToEdit.name, changes);
-    setRepositoryList((prevList) =>
-      prevList.map((repo) => (repo.id === repoToEdit.id ? { ...repo, ...updatedRepo } : repo))
-    );
-    setShowEditModal(false);
-    setRepoToEdit(null);
-    notify('Repositorio actualizado correctamente', 'success');
+    history.push('/tab2', { editRepo: repository });
   };
 
   // --- Eliminación (DELETE) ---
@@ -141,13 +123,6 @@ const Tab1: React.FC = () => {
             </IonText>
           </div>
         )}
-
-        <EditRepoModal
-          isOpen={showEditModal}
-          repository={repoToEdit}
-          onCancel={handleEditCancel}
-          onSave={handleEditSave}
-        />
 
         <IonAlert
           isOpen={showDeleteAlert}
