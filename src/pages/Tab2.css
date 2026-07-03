@@ -1,16 +1,33 @@
+/* Centramos el formulario y evitamos que se estire demasiado en pantallas grandes */
 .form-container {
-    min-height: 100%;
+    min-height: 80vh; 
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 32px;
+    gap: 20px;
     padding: 24px; 
-
+    max-width: 500px; /* Mantiene el formulario compacto y estético */
+    margin: 0 auto;   /* Lo centra horizontalmente */
 }
 
-.form-field{
+/* Estilo para los inputs y textarea */
+.form-field {
     width: 100%;
+    /* Variables de Ionic para darle un fondo sutil y bordes redondeados */
+    --background: #f4f5f8; 
+    --padding-start: 16px;
+    --border-radius: 12px;
+}
 
-    
+/* Un pequeño efecto extra exclusivo para el botón */
+ion-button.form-field {
+    margin-top: 12px;
+    --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease;
+}
+
+/* Efecto visual al presionar el botón */
+ion-button.form-field:active {
+    transform: scale(0.97);
 }
